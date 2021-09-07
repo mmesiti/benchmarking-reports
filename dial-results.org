@@ -1,0 +1,98 @@
+#+TITLE: Dial Results
+#+AUTHOR: Michele Mesiti
+
+
+* Sombrero
+
+Single node - 128 ranks per node
+
+|------------+------------+---------+-------|
+| compiler   | mpi        | Gflop/s | notes |
+|------------+------------+---------+-------|
+| aocc 3.0.0 | ompi 4.0.5 |     188 |       |
+| gnu 10.3   | ompi 4.0.5 |     194 |       |
+| intel 2019 | intel 2019 |     204 |       |
+| intel 2021 | intel 2021 |     212 |       |
+|------------+------------+---------+-------|
+
+64 node runs - 128 ranks per node
+
+|------------+------------+---------+-----------|
+| compiler   | mpi        | Gflop/s | notes     |
+|------------+------------+---------+-----------|
+| aocc 3.0.0 | ompi 4.0.5 |    6919 |           |
+| gnu 10.3   | ompi 4.0.5 |    3284 |           |
+| intel 2019 | intel 2019 |   10961 |           |
+| intel 2021 | intel 2021 |    6942 | best of 2 |
+|------------+------------+---------+-----------|
+
+** Scaling
+
+Scaling with intel 2019.
+
+|-------+------------|
+| Nodes | intel 2019 |
+|       |    Gflop/s |
+|-------+------------|
+|     1 |        185 |
+|     2 |        369 |
+|     3 |        500 |
+|     4 |        742 |
+|     8 |       1450 |
+|    12 |       2202 |
+|    16 |       2964 |
+|    24 |       4564 |
+|    32 |       6004 |
+|    48 |       8274 |
+|-------+------------|
+
+
+** Study with underpopulated node
+These have ben run with
+#+begin_src
+export I_MPI_DEBUG=4
+export I_MPI_PROCESSOR_LIST=allcores:map=bunch
+#+end_src
+This makes so that processes use contiguous groups of cores.
+
+|-----------+------------|
+| Processes | Intel 2019 |
+|           |    Gflop/s |
+|-----------+------------|
+|         4 |      19.27 |
+|         8 |      38.22 |
+|        16 |      71.29 |
+|        32 |     132.23 |
+|        64 |     185.50 |
+|        96 |     190.34 |
+|       128 |     206.27 |
+|-----------+------------|
+
+
+* Grid
+
+
+For the 64 node runs:
+
+|----------+----------+----------+-------|
+| compiler | mpi      |  Gflop/s | notes |
+|          |          | per node |       |
+|----------+----------+----------+-------|
+| aoc3     | ompi405  |      152 |       |
+| gcc10    | mvapich2 |       62 |       |
+| i2019    | i2019    |       63 |       |
+| i2021    | i2021    |       60 |       |
+|----------+----------+----------+-------|
+
+
+For the single node runs:
+
+|----------+---------+----------+-------|
+| compiler | mpi     |  Gflop/s | notes |
+|          |         | per node |       |
+|----------+---------+----------+-------|
+| aoc3     | ompi405 |      305 |       |
+| gcc      | ompi110 |      291 |       |
+| gcc10    | ompi110 |      289 |       |
+| i2019    | i2019   |      290 |       |
+|----------+---------+----------+-------|

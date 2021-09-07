@@ -1,0 +1,135 @@
+#+TITLE: Sombrero Results
+#+AUTHOR: Michele Mesiti
+
+
+* Sombrero
+
+Single rank, using openMP on a single node:
+We know that Sombrero cannot use openMP efficiently
+because of the memory layout adopted.
+
+|------------+------------+---------+-------|
+| compiler   | mpi        | Gflop/s | notes |
+|------------+------------+---------+-------|
+| gnu 10.0.2 | ompi 4.0.5 |    4.47 |       |
+|------------+------------+---------+-------|
+
+Single rank without openMP, on a single node.
+
+|--------------+---------------+---------+--------|
+| compiler     | mpi           | Gflop/s | notes  |
+|--------------+---------------+---------+--------|
+| aocc 3.0.0   | ompi 4.0.5    |    3.96 |        |
+| gcc 10.0.2   | ompi 4.0.5    |    4.02 |        |
+| gcc 10.0.2   | ompi 4.0.5    |    4.39 | znver2 |
+| intel 2018   | intel 2018    |    5.14 |        |
+| intel 2018   | intel 2020u2  |    5.04 |        |
+| intel 2020u2 | i2020u2       |    5.24 |        |
+|--------------+---------------+---------+--------|
+
+
+Single node - 128 ranks per node.
+I see a ~5% variability in the performance values
+for repeated runs.
+|--------------+---------------+---------+-----------|
+| compiler     | mpi           | Gflop/s | notes     |
+|--------------+---------------+---------+-----------|
+| gcc 10.0.2   | mvapich 2.3.6 |     186 | best of 4 |
+| gcc 10.0.2   | ompi 4.0.5    |     194 |           |
+| gcc 10.0.2   | ompi 4.0.5    |     195 | znver2    |
+| aocc 3.0.0   | ompi 4.0.5    |     190 | best of 4 |
+| intel 2018   | intel 2018    |     209 | best of 4 |
+| intel 2018   | intel 2020u2  |     197 | best of 4 |
+| intel 2020u2 | i2020u2       |     168 | best of 7 |
+|--------------+---------------+---------+-----------|
+
+
+64 node run - 128 ranks per node.
+This is run on a large lattice,
+while the single node runs and the strong scaling attempts
+have been done on a medium lattice.
+
+I see a <5% fluctuation in the performance values
+for repeated runs.
+|--------------+---------------+---------+-----------|
+| compiler     | mpi           | Gflop/s | notes     |
+|--------------+---------------+---------+-----------|
+| gcc 10.0.2   | mvapich 2.3.6 |     590 | best of 3 |
+| aocc 3.0.0   | ompi 4.0.5    |    9779 | best of 4 |
+| gcc 10.0.2   | ompi 4.0.5    |    9779 | best of 4 |
+| gcc 10.0.2   | ompi 4.0.5    |   10081 | znver2    |
+| intel 2018   | intel 2018    |    6014 | best of 4 |
+| intel 2020u2 | i2020u2       |   11757 | best of 4 |
+|--------------+---------------+---------+-----------|
+
+** Sombrero Scaling
+
+Each node has ben used with 128 mpi ranks.
+This is the scaling with the intel 2018 compiler/mpi
+(best performer on a single node):
+
+|-------+-----------+
+| Nodes | intel2018 |
+|       |   Gflop/s |
+|-------+-----------+
+|     1 |    186.19 |
+|     2 |    372.68 |
+|     3 |    447.74 |
+|     4 |    752.84 |
+|     8 |   1504.37 |
+|    12 |   2255.37 |
+|    16 |   3051.05 |
+|    24 |   4815.50 |
+|    32 |   3918.90 |
+|    48 |   4893.36 |
+|-------+-----------+
+
+*I have not been able to run again*
+either the intel 2020 update2
+(that was the best performer on 64 nodes).
+or the gcc 10 / openmpi 4.0.5
+on more than 1 node.
+I have not attempted any other combination.
+If needed, I am happy to provide details about the failures.
+
+
+* Grid
+The only combination that I managed to run successfully so far
+is gcc 11 with openMPI 4.1.1 no ucx.
+The recommendation is to use --map-py numa,
+but there are too many numa domains for the 64 node case,
+and for geometric reasons I was forced to use
+one rank per socket, with 64 threads per rank.
+
+|-------+------------------+-----------------|
+| Nodes | Gflop/s PER NODE | Notes           |
+|-------+------------------+-----------------|
+|     1 |            281.2 | --map-by numa   |
+|     2 |            269.6 | --map-by numa   |
+|     4 |            268.5 | --map-by numa   |
+|     8 |            213.9 | --map-by numa   |
+|    64 |            147.2 | --map-by socket |
+|-------+------------------+-----------------|
+
+* Comparison with other systems
+** Grid
+- On the Dial3 system in Leicester, which has similar AMD cpus,
+  the single node performance in the best case
+  is around 290-305 Gflop/s.
+  The 64 node performance is about 150 Gflop/s.
+- On the IceLake-based Cambridge system
+  we have measured 402 Gflop/s per node,
+  and 527 Gflop/s on 4 A100 GPUs.
+
+The developers of Grid told us that the performance
+should be up to a factor of 2 higher,
+but the machine does not seem to be configured correctly for that.
+
+The fact that the grid benchmark fails on Cosma8
+except for the one version of mpi that explicitly states 'no-ucx'
+might be worth investigating?
+
+** Sombrero
+- On the Dial3 system in Leicester mentioned before
+  we get a maximum around 210 Gflop/s for the single node case,
+  and a maximum around 10900 Gflop/s for the 64 node setup.
